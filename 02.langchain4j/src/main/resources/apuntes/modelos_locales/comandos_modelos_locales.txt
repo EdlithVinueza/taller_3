@@ -1,0 +1,112 @@
+==========================================
+COMANDOS PARA LLAMA.CPP
+==========================================
+Ejecutables: C:\tools\llama-cpp
+Modelos:     C:\Tools\llama-models
+Puerto:      8080 (siempre el mismo)
+==========================================
+
+==========================================
+PASO 1: Navegar a la carpeta de ejecutables
+==========================================
+
+cd C:\tools\llama-cpp
+
+
+==========================================
+PASO 2: LEVANTAR SERVIDOR CON DIFERENTES MODELOS
+==========================================
+
+# Modelo Llama 3.2 (chat principal):
+llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf
+llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf --host 127.0.0.1 --port 8080
+------
+# Modelo Llama 3.2 (versión optimizada):
+llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf  -t 8 -c 2048 --temp 0.7
+llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf --host 127.0.0.1 --port 8080 -t 8 -c 2048 --temp 0.7
+------
+# Modelo all-MiniLM (embeddings - vectores):
+llama-server --model C:/Tools/llama-models/all-minilm-l6-v2-q8_0.gguf --embedding
+llama-server --model C:/Tools/llama-models/all-minilm-l6-v2-q8_0.gguf --host 127.0.0.1 --port 8080 --embedding
+
+# Modelo Gemma 4 (chat alternativo - liviano):
+llama-server --model C:/Tools/llama-models/gemma-4-E4B-it-Q4_K_S.gguf --host 127.0.0.1 --port 8080
+
+# Modelo Gemma 4 (con plantilla específica por si responde mal):
+llama-server --model C:/Tools/llama-models/gemma-4-E4B-it-Q4_K_S.gguf --host 127.0.0.1 --port 8080 --chat-template gemma
+
+
+==========================================
+PASO 3: CHAT INTERACTIVO (sin servidor)
+==========================================
+
+# Llama 3.2:
+llama-cli --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf -cnv
+
+# Gemma 4:
+llama-cli --model C:/Tools/llama-models/gemma-4-E4B-it-Q4_K_S.gguf -cnv
+
+
+==========================================
+PASO 4: PROBAR QUE EL SERVIDOR FUNCIONA
+==========================================
+
+# Probar chat (para cualquier modelo de chat):
+curl http://localhost:8080/v1/chat/completions -H "Content-Type: application/json" -d "{\"model\":\"llama\",\"messages\":[{\"role\":\"user\",\"content\":\"Hola\"}]}"
+
+# Probar embeddings (solo si levantaste all-MiniLM con --embedding):
+curl http://localhost:8080/embedding -H "Content-Type: application/json" -d "{\"content\":\"Prueba de embedding\"}"
+
+
+==========================================
+COMANDOS RÁPIDOS (copia y pega directamente)
+==========================================
+
+# Levantar Llama 3.2:
+cd C:\tools\llama-cpp && llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf --port 8080
+
+# Levantar all-MiniLM (embeddings):
+cd C:\tools\llama-cpp && llama-server --model C:/Tools/llama-models/all-minilm-l6-v2-q8_0.gguf --port 8080 --embedding
+
+# Levantar Gemma 4:
+cd C:\tools\llama-cpp && llama-server --model C:/Tools/llama-models/gemma-4-E4B-it-Q4_K_S.gguf --port 8080
+
+
+==========================================
+PARÁMETROS ÚTILES (para ajustar rendimiento)
+==========================================
+
+--model         : Ruta al archivo .gguf (obligatorio)
+--port          : Puerto (8080 por defecto, puedes cambiarlo)
+--host          : Dirección IP (127.0.0.1 = solo local, 0.0.0.0 = toda la red)
+-t N            : Usa N hilos de CPU (ej: -t 8)
+-c N            : Tamaño del contexto en tokens (ej: -c 2048)
+--temp N        : Creatividad (0 = determinista, 1 = creativo)
+--top-p N       : Nucleus sampling (ej: --top-p 0.9)
+--repeat-penalty N : Penalización por repetición (ej: 1.1)
+-ngl N          : Envía N capas a GPU (si tienes Nvidia)
+--embedding     : Activa endpoints de embeddings (para all-MiniLM)
+--chat-template : Plantilla de chat específica (gemma, llama, etc.)
+
+
+==========================================
+EJEMPLO CON TODOS LOS PARÁMETROS (Llama 3.2)
+==========================================
+
+llama-server --model C:/Tools/llama-models/llama-3.2-1b-instruct-q8_0.gguf --host 127.0.0.1 --port 8080 -t 8 -c 4096 --temp 0.7 --top-p 0.9 --repeat-penalty 1.1
+
+
+==========================================
+NOTAS IMPORTANTES
+==========================================
+
+1. Ejecuta los comandos desde CMD o PowerShell
+2. Los ejecutables están en: C:\tools\llama-cpp
+3. Los modelos están en: C:\Tools\llama-models
+4. SIEMPRE usa el puerto 8080 (solo corres un modelo a la vez)
+5. Para detener el servidor: presiona Ctrl + C
+6. Si el puerto 8080 está ocupado, ciérralo o cámbialo con --port 8081
+7. Para ver todos los modelos disponibles: dir C:\Tools\llama-models\*.gguf
+8. El modelo all-MiniLM SOLO sirve para embeddings, NO para chat
+
+==========================================

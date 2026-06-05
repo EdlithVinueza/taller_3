@@ -1,0 +1,11 @@
+server:
+  port: 8090
+
+spring:
+  ai:
+    openai:
+      api-key: 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
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        options:
+          model: llama-3.3-70b-versatile

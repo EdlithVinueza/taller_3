@@ -1,0 +1,42 @@
+# ============================================
+# APPLICATION.YML - CONFIGURACIÓN DEL SERVICIO
+# ============================================
+# Ubicación: src/main/resources/application.yml
+
+llm:
+  groq:
+    # URL de la API de Groq (compatible con OpenAI)
+    base-url: "https://api.groq.com/openai/v1"
+
+    # Modelo Groq a usar
+    # ✓ Modelos vigentes 2026: llama-3.3-70b-versatile, llama-3.1-8b-instant
+    model-name: "llama-3.1-8b-instant"
+
+    # Configuración de logging
+    log-requests: true
+    log-responses: true
+
+    # Timeout en segundos
+    timeout: 30
+    
+    # Modelos de fallback (se intentarán en orden si el modelo principal falla/decommissioned)
+    fallback-models:
+      - "gemini-1.5-pro"
+      - "gemini-1.5-flash"
+
+    # Modelos de fallback (se intentarán en orden si el modelo principal falla/decommissioned)
+    fallback-models:
+      - "mixtral-8x7b-32768"
+      - "gemma-7b-it"
+
+  gemini:
+    # Modelo de Gemini / AI Studio
+    # Ejemplos: gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro
+    model-name: "gemini-2.0-flash"
+
+    # Configuración de logging
+    log-requests: true
+    log-responses: true
+
+    # Timeout en segundos
+    timeout: 30
