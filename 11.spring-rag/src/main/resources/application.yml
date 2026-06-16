@@ -1,0 +1,27 @@
+server:
+    port: 8090
+
+spring:
+    ai:
+        model:
+            embedding: transformers
+        embedding:
+            transformer: #Configuración para embeddings locales
+                onnx:
+                    model-uri: classpath:models/model.onnx
+                tokenizer:
+                    uri: classpath:models/tokenizer.json
+        openai:
+            api-key: ${API-KEY}
+            base-url: https://api.groq.com/openai/v1
+            chat:
+                options:
+                    model: llama-3.3-70b-versatile
+
+#link de descarga de model.onnx y tokenizer.json
+#https://github.com/spring-projects/spring-ai/tree/main/models/spring-ai-transformers/src/main/resources/onnx/all-MiniLM-L6-v2
+#se ingnoran estos archivos al subir el proyecto a github
+
+logging:
+    level:
+        org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG

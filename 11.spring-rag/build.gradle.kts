@@ -1,23 +1,22 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.2.5"
-    // CAMBIA AQUÍ: Se actualizó de 1.1.4 a 1.1.7 para dar soporte a versiones nuevas de Gradle
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "org.example"
-version = "unspecified"
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 repositories {
     mavenCentral()
-    // Repositorio oficial para descargar los hitos de Spring AI (como el M7)
-    maven { url = uri("https://spring.io") }
 }
+
 
 extra["springAiVersion"] = "2.0.0"
 
@@ -44,8 +43,15 @@ dependencies {
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:4.20.0")
 }
 
+
 dependencyManagement {
     imports {
         mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
     }
 }
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+tasks.register("prepareKotlinBuildScriptModel") {}
+

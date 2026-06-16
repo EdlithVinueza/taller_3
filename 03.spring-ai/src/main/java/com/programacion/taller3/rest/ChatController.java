@@ -1,4 +1,5 @@
 package com.programacion.taller3.rest;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
