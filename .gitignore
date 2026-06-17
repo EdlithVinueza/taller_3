@@ -46,3 +46,5 @@ bin/
 secrets.yml
 **/secrets.yml
 
+# Ignorar resources de 11.spring-rag
+11.spring-rag/src/main/resources/models

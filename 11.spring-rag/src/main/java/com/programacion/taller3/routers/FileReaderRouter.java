@@ -23,7 +23,7 @@ public class FileReaderRouter extends RouteBuilder {
                 .log("Archivo leido: ${header.CamelFileName}")
                 .bean("fileProcessor")
                 .bean("transformerProcessor")
-        //.to("direct:processFile");
+                .bean("embeddingProcessor");
         ;
     }
 }
