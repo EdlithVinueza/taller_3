@@ -2,6 +2,10 @@ server:
     port: 8090
 
 spring:
+    docker:
+        compose:
+            enabled: true
+            file: 11.spring-rag/docker-compose.yml
     ai:
         model:
             embedding: transformers
@@ -17,6 +21,8 @@ spring:
             chat:
                 options:
                     model: llama-3.3-70b-versatile
+                embedding:
+                    enabled: false
 
 #link de descarga de model.onnx y tokenizer.json
 #https://github.com/spring-projects/spring-ai/tree/main/models/spring-ai-transformers/src/main/resources/onnx/all-MiniLM-L6-v2
