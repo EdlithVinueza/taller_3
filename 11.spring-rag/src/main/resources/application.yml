@@ -7,6 +7,9 @@ spring:
             enabled: true
             file: 11.spring-rag/docker-compose.yml
     ai:
+        vectorstore:
+            qdrant:
+                initialize-schema: true
         model:
             embedding: transformers
         embedding:
@@ -16,7 +19,7 @@ spring:
                 tokenizer:
                     uri: classpath:models/tokenizer.json
         openai:
-            api-key: ${API-KEY}
+            api-key: ${API_KEY}
             base-url: https://api.groq.com/openai/v1
             chat:
                 options:

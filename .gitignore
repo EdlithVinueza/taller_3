@@ -45,6 +45,8 @@ bin/
 # Secretos
 secrets.yml
 **/secrets.yml
+.vscode/launch.json
+.env
 
 # Ignorar resources de 11.spring-rag
 11.spring-rag/src/main/resources/models

@@ -21,7 +21,7 @@ repositories {
 extra["springAiVersion"] = "2.0.0"
 
 dependencies {
-    // 1. CORREGIDO: Sin dos puntos ni puntos al final
+    // 1. CORREGIDO: Sin dos puntos ni pimplementation("org.springframework.ai:spring-ai-vector-store-advisor")untos al final
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.ai:spring-ai-starter-model-openai")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -38,6 +38,7 @@ dependencies {
 
     //--Vector Store
     implementation("org.springframework.ai:spring-ai-starter-vector-store-qdrant")
+    implementation("org.springframework.ai:spring-ai-vector-store-advisor")
 
     //--EIPs
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:4.20.0")

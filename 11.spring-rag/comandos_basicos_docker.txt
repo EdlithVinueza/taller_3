@@ -1,0 +1,70 @@
+=========================================
+COMANDOS BÁSICOS DE DOCKER Y DOCKER COMPOSE
+=========================================
+
+-----------------------------------------
+1. DOCKER COMPOSE (Proyectos con docker-compose.yml)
+-----------------------------------------
+
+# Iniciar los contenedores en segundo plano (Recomendado)
+docker compose up -d
+
+# Detener los contenedores (sin borrarlos)
+docker compose stop
+
+# Iniciar contenedores que estaban detenidos
+docker compose start
+
+# Detener y BORRAR los contenedores (y sus redes)
+docker compose down
+
+# Ver los logs (registros) de los contenedores
+docker compose logs -f
+
+-----------------------------------------
+2. DOCKER BÁSICO (Gestión general)
+-----------------------------------------
+
+# Ver todos los contenedores en ejecución
+docker ps
+
+# Ver TODOS los contenedores (ejecutándose y detenidos)
+docker ps -a
+
+# Iniciar un contenedor específico
+docker start <nombre_o_id_del_contenedor>
+
+# Detener un contenedor específico
+docker stop <nombre_o_id_del_contenedor>
+
+# Borrar un contenedor específico (debe estar detenido)
+docker rm <nombre_o_id_del_contenedor>
+
+# Borrar TODOS los contenedores detenidos (Limpieza)
+docker container prune
+
+-----------------------------------------
+3. IMÁGENES DOCKER
+-----------------------------------------
+
+# Listar las imágenes descargadas en tu sistema
+docker images
+
+# Borrar una imagen específica
+docker rmi <nombre_o_id_de_la_imagen>
+
+# Borrar todas las imágenes que no estén siendo usadas
+docker image prune -a
+
+-----------------------------------------
+4. VOLÚMENES (Donde se guardan los datos)
+-----------------------------------------
+
+# Listar los volúmenes existentes
+docker volume ls
+
+# Borrar un volumen específico
+docker volume rm <nombre_del_volumen>
+
+# Limpiar volúmenes no utilizados
+docker volume prune
