@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "mcp-server-filesystem",
+        "/home/edlith/tools/distribuida2626"
+      ]
+    },
+    "mi_mpc_server": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "/home/edlith/Documentos/UCE 26-26/TALLER 3/taller_3/13.spring-mpc-server-stdio/build/libs/13.spring-mpc-server-stdio.jar"
+      ]
+    }
+  }
+}

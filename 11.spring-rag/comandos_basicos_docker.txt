@@ -68,3 +68,7 @@ docker volume rm <nombre_del_volumen>
 
 # Limpiar volúmenes no utilizados
 docker volume prune
+
+docker compose -f "/home/edlith/Documentos/UCE 26-26/TALLER 3/taller_3/11.spring-rag/docker-compose.yml" -p down
+
+
