@@ -995,3 +995,212 @@ public class ChatController {
                                                                 .build()));
         }
 }
+
+================================================================================
+PARTE 7: GUÍA DE DEPENDENCIAS Y SU PROPÓSITO POR PROYECTO (COPIAR Y PEGAR)
+================================================================================
+
+A continuación tienes los bloques de dependencias ("dependencies") de cada uno de los proyectos, listos para copiar, pegar y utilizar directamente en tus archivos de Gradle:
+
+--------------------------------------------------------------------------------
+1. PROYECTO: 01.embeddings (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Tokenizador rápido para Java compatible con tiktoken de OpenAI (conteo de tokens)
+    implementation("com.knuddels:jtokkit:1.1.0")
+
+    // API de Deep Java Library (DJL) para ejecutar modelos locales en Java
+    implementation("ai.djl:api:0.36.0")
+    // Motor de PyTorch para DJL necesario para ejecutar los modelos
+    implementation("ai.djl.pytorch:pytorch-engine:0.36.0")
+
+    // Core del framework LangChain4j para la orquestación e integración de LLMs en Java
+    implementation("dev.langchain4j:langchain4j:1.12.2")
+    
+    // Modelo de embeddings local cuantizado "all-miniLM-L6-v2" para generar vectores en la JVM
+    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2-q:1.12.2-beta22")
+}
+
+--------------------------------------------------------------------------------
+2. PROYECTO: 02.langchain4j (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Core de LangChain4j (definición de prompts, memoria, herramientas, etc.)
+    implementation("dev.langchain4j:langchain4j:${langchain4jVersion}")
+    
+    // Conector oficial para APIs compatibles con el protocolo de OpenAI (ej. OpenAI, Groq Cloud, Ollama)
+    implementation("dev.langchain4j:langchain4j-open-ai:${langchain4jVersion}")
+    
+    // Fachada abstracta para registrar logs en Java
+    implementation("org.slf4j:slf4j-simple:2.0.17")
+    // Motor concreto de logs Logback Classic
+    implementation("ch.qos.logback:logback-classic:1.5.32")
+
+    // Interfaces e infraestructura de LangChain4j para trabajar con embeddings vectoriales
+    implementation("dev.langchain4j:langchain4j-embeddings:1.14.0-beta24")
+    
+    // Modelo estándar (no cuantizado) "all-miniLM-L6-v2" para embeddings locales
+    implementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.14.0-beta24")
+}
+
+--------------------------------------------------------------------------------
+3. PROYECTO: 03.spring-ai (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Inicializador web para exponer servicios a través de REST APIs con Tomcat embebido
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    
+    // Starter de Spring AI que configura la conexión a modelos compatibles con OpenAI (ej. Groq o local)
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    
+    // Actuator para monitorización del estado de salud del servicio (health check, métricas)
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Herramientas de testeo unitario y de integración para Spring Boot (JUnit 5, Mockito)
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // Lanzador/ejecutor de pruebas en la plataforma JUnit
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+--------------------------------------------------------------------------------
+4. PROYECTO: repaso_agentes (build.gradle - Groovy)
+--------------------------------------------------------------------------------
+dependencies {
+    // Core central de LangChain4j para la definición y orquestación de agentes autónomos y memoria
+    implementation("dev.langchain4j:langchain4j:${langchain4jVersion}")
+    
+    // Integración de LangChain4j con APIs compatibles con OpenAI (ej. Groq Cloud)
+    implementation("dev.langchain4j:langchain4j-open-ai:${langchain4jVersion}")
+    
+    // Integración de LangChain4j con los modelos fundacionales de Google Gemini
+    implementation("dev.langchain4j:langchain4j-google-ai-gemini:${langchain4jVersion}")
+
+    // Módulos de la biblioteca Jackson para leer, parsear y escribir archivos en formato YAML
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+
+    // Soporte e interfaces necesarias para consultar y exponer APIs mediante GraphQL
+    implementation("com.graphql-java:graphql-java:21.3")
+    implementation("com.graphql-java:graphql-java-extended-scalars:21.0")
+
+    // Conversor liviano bidireccional entre objetos Java y JSON
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Impresión básica de logs por la consola estándar
+    implementation("org.slf4j:slf4j-simple:2.0.17")
+}
+
+--------------------------------------------------------------------------------
+5. PROYECTO: 10.spring-prompt (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Inicializador web para REST APIs (MVC + Tomcat)
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    
+    // Auto-configuración de Spring AI para APIs compatibles con OpenAI (ej. Groq)
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    
+    // Diagnósticos y monitoreo de salud del microservicio
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Entorno de pruebas de integración y JUnit 5
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+--------------------------------------------------------------------------------
+6. PROYECTO: 11.spring-rag (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Inicializador web para endpoints REST y flujos reactivos de streaming (SSE)
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    
+    // Starter para conectarse y ejecutar peticiones a modelos compatibles con OpenAI (ej. Groq Cloud)
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    
+    // Actuator para monitorización del microservicio
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Apache Camel para el enrutamiento e ingesta automatizada de archivos locales
+    implementation("org.apache.camel.springboot:camel-file-starter:4.20.0")
+
+    // Lectores específicos de Spring AI para extraer texto de PDFs
+    implementation("org.springframework.ai:spring-ai-pdf-document-reader")
+    // Lector universal de documentos basado en Apache Tika (doc, docx, xls, etc.)
+    implementation("org.springframework.ai:spring-ai-tika-document-reader")
+
+    // Motor local basado en ONNX Runtime para generar embeddings vectoriales sin llamadas API
+    implementation("org.springframework.ai:spring-ai-starter-model-transformers")
+
+    // Integración de cliente y almacenamiento de vectores en la base vectorial Qdrant
+    implementation("org.springframework.ai:spring-ai-starter-vector-store-qdrant")
+    // Advisor para inyectar de manera automatizada contexto del RAG en el prompt
+    implementation("org.springframework.ai:spring-ai-vector-store-advisor")
+
+    // Core central de integración de Apache Camel en Spring Boot
+    implementation("org.apache.camel.springboot:camel-spring-boot-starter:4.20.0")
+
+    // Levanta y apaga automáticamente el contenedor Docker de Qdrant según el ciclo de vida de la app
+    runtimeOnly("org.springframework.boot:spring-boot-docker-compose")
+}
+
+--------------------------------------------------------------------------------
+7. PROYECTO: 12.spring-mcp-client (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Inicializador web base para endpoints REST
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    
+    // Starter para la interacción con modelos LLM compatibles con OpenAI (ej. Groq)
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    
+    // Actuator para diagnóstico interno y salud
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Lectores de documentos (PDF y universal con Apache Tika)
+    implementation("org.springframework.ai:spring-ai-pdf-document-reader")
+    implementation("org.springframework.ai:spring-ai-tika-document-reader")
+
+    // Motor local basado en ONNX Runtime para la vectorización de textos (embeddings)
+    implementation("org.springframework.ai:spring-ai-starter-model-transformers")
+
+    // Conector cliente oficial para la base de datos vectorial Qdrant
+    implementation("org.springframework.ai:spring-ai-starter-vector-store-qdrant")
+    // Asesor (Advisor) para la recuperación de contexto RAG
+    implementation("org.springframework.ai:spring-ai-vector-store-advisor")
+
+    // Apache Camel para integrar y automatizar el flujo de lectura de archivos locales
+    implementation("org.apache.camel.springboot:camel-spring-boot-starter:4.20.0")
+    implementation("org.apache.camel.springboot:camel-file-starter:4.20.0")
+    
+    // Cliente MCP. Conecta a la app con servidores MCP para descubrir y ejecutar herramientas/Tools dinámicamente
+    implementation("org.springframework.ai:spring-ai-starter-mcp-client")
+}
+
+--------------------------------------------------------------------------------
+8. PROYECTO: 13.spring-mpc-server-stdio (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Configuración MVC estándar de Spring Boot para endpoints REST auxiliares
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    
+    // Diagnósticos e indicadores de salud de la aplicación
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    
+    // Servidor MCP vía stdio (consola). Expone herramientas Java a clientes MCP comunicándose por I/O estándar
+    implementation("org.springframework.ai:spring-ai-starter-mcp-server")
+}
+
+--------------------------------------------------------------------------------
+9. PROYECTO: 14.spring-mcp-server-http (build.gradle.kts)
+--------------------------------------------------------------------------------
+dependencies {
+    // Configuración MVC estándar de Spring Boot para exponer endpoints web REST
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    
+    // Diagnósticos e indicadores de salud de la aplicación
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    
+    // Servidor MCP vía HTTP (SSE). Expone las herramientas Java de forma remota a través de endpoints web
+    implementation("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
+}
