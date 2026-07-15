@@ -1,0 +1,997 @@
+================================================================================
+GUÍA GENERAL DE ESTUDIO DE EXAMEN - TALLERES SPRING AI
+Proyectos: 03.spring-ai, 10.spring-prompt, 11.spring-rag
+================================================================================
+
+================================================================================
+PARTE 1: COMANDOS PARA EJECUTAR MODELOS LOCALES (GGUF)
+================================================================================
+Si tienes los archivos GGUF en tu máquina local:
+- llama-3.2-1b-instruct-q8_0.gguf
+- gemma-4-E4B-it-Q4_K_S.gguf
+- all-minilm-l6-v2-q8_0.gguf
+
+Puedes ejecutarlos localmente usando dos alternativas populares:
+
+--------------------------------------------------------------------------------
+OPCIÓN A: Con llama.cpp (Usando llama-server)
+--------------------------------------------------------------------------------
+llama-server expone una API compatible con la de OpenAI directamente desde el archivo GGUF.
+
+1. Para Llama 3.2 1B Instruct (GGUF):
+   $ ./llama-server -m /ruta/a/llama-3.2-1b-instruct-q8_0.gguf -c 2048 --port 8081 --host 0.0.0.0
+
+2. Para Gemma 2 (Gemma 4B / Gemma 2B GGUF):
+   $ ./llama-server -m /ruta/a/gemma-4-E4B-it-Q4_K_S.gguf -c 4096 --port 8081 --host 0.0.0.0
+
+* Nota: El puerto 8081 levantará la API de chat en 'http://localhost:8081/v1/chat/completions'.
+
+--------------------------------------------------------------------------------
+OPCIÓN B: Con Ollama (Creación y Ejecución de Modelos)
+--------------------------------------------------------------------------------
+Si prefieres usar Ollama para gestionar los modelos GGUF locales:
+
+1. Crea un archivo de texto llamado 'Modelfile' en la misma carpeta del GGUF:
+   --- Modelfile ---
+   FROM ./llama-3.2-1b-instruct-q8_0.gguf
+   -----------------
+
+2. Crea el modelo en Ollama desde la terminal:
+   $ ollama create llama3.2-local -f Modelfile
+
+3. Corre el modelo en Ollama:
+   $ ollama run llama3.2-local
+
+* Nota: Ollama corre un servidor local en 'http://localhost:11434'.
+
+
+================================================================================
+PARTE 2: EJEMPLOS DE CONFIGURACIÓN DE YML (Groq Cloud vs Local model)
+================================================================================
+
+--------------------------------------------------------------------------------
+CASO 1: Configurado con Groq (API Cloud compatible con OpenAI)
+Ruta recomendada: src/main/resources/application.yml
+--------------------------------------------------------------------------------
+server:
+  port: 8090
+
+spring:
+  ai:
+    openai:
+      api-key: ${API_KEY} # O tu clave hardcodeada: gsk_...
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        options:
+          model: llama-3.3-70b-versatile
+          temperature: 0.7
+
+--------------------------------------------------------------------------------
+CASO 2: Configurado con Llama-Server Local (llama.cpp en puerto 8081)
+Ruta recomendada: src/main/resources/application.yml
+--------------------------------------------------------------------------------
+server:
+  port: 8090
+
+spring:
+  ai:
+    openai:
+      api-key: local # Llama-server no requiere clave real, pero Spring AI la exige
+      base-url: http://localhost:8081 # Dirección donde corre llama-server
+      chat:
+        options:
+          model: llama-3.2-1b-instruct # Nombre referencial, llama-server usa el cargado en consola
+          temperature: 0.7
+
+--------------------------------------------------------------------------------
+CASO 3: Configurado con Ollama Local (Ollama en puerto 11434)
+*Requiere dependencia de spring-ai-ollama-starter*
+--------------------------------------------------------------------------------
+server:
+  port: 8090
+
+spring:
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.2-local # El nombre asignado al crear el Modelfile
+
+
+================================================================================
+PARTE 3: DOCKER COMPOSE PARA BASES DE DATOS VECTORIALES (Qdrant & Pgvector)
+================================================================================
+
+--------------------------------------------------------------------------------
+OPCIÓN 1: Contenedor Qdrant
+--------------------------------------------------------------------------------
+version: '3.8'
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: taller3-qdrant
+    ports:
+      - '6333:6333' # Puerto REST HTTP
+      - '6334:6334' # Puerto gRPC (Utilizado por Spring AI)
+    volumes:
+      - qdrant_data:/qdrant/storage
+volumes:
+  qdrant_data:
+
+--------------------------------------------------------------------------------
+OPCIÓN 2: Contenedor Pgvector (PostgreSQL con soporte vectorial)
+--------------------------------------------------------------------------------
+version: '3.8'
+services:
+  pgvector:
+    image: ankane/pgvector:latest
+    container_name: taller3-pgvector
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: vector_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+volumes:
+  pg_data:
+
+
+================================================================================
+PARTE 4: CÓDIGO TALLER 03.spring-ai
+================================================================================
+
+--------------------------------------------------------------------------------
+Ruta: /03.spring-ai/build.gradle.kts
+--------------------------------------------------------------------------------
+plugins {
+    java
+    id("org.springframework.boot") version "4.0.6"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+extra["springAiVersion"] = "2.0.0-M7"
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+tasks.register("prepareKotlinBuildScriptModel") {}
+
+--------------------------------------------------------------------------------
+Ruta: /03.spring-ai/src/main/resources/application.yml
+--------------------------------------------------------------------------------
+server:
+  port: 8090
+
+spring:
+  ai:
+    openai:
+      api-key: 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
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        options:
+          model: llama-3.3-70b-versatile
+
+--------------------------------------------------------------------------------
+Ruta: /03.spring-ai/src/main/java/com/programacion/taller3/SpringAiMain.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringAiMain {
+
+    static void main(String[] args) {
+        SpringApplication.run(SpringAiMain.class, args);
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /03.spring-ai/src/main/java/com/programacion/taller3/rest/ChatController.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.rest;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class ChatController {
+
+    final ChatClient chatClient;
+
+    public ChatController(ChatClient.Builder builder) {
+        chatClient = builder
+                .build();
+    }
+
+    //http://localhost:8090/chat?message=Hola
+    @GetMapping("/chat")
+    public String chat(@RequestParam String message) {
+        return chatClient.prompt()
+                .user(message)
+                .call()
+                .content();
+    }
+}
+
+
+================================================================================
+PARTE 5: CÓDIGO TALLER 10.spring-prompt
+================================================================================
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/build.gradle.kts
+--------------------------------------------------------------------------------
+plugins {
+    java
+    id("org.springframework.boot") version "4.0.6"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+extra["springAiVersion"] = "2.0.0-M7"
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+tasks.register("prepareKotlinBuildScriptModel") {}
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/resources/application.yml
+--------------------------------------------------------------------------------
+server:
+    port: 8090
+
+spring:
+    ai:
+        openai:
+            api-key: ${API_KEY}
+            base-url: https://api.groq.com/openai/v1
+            chat:
+                options:
+                    model: llama-3.3-70b-versatile
+
+
+logging:
+    level:
+        org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/resources/prompts/systemPrompt.st
+--------------------------------------------------------------------------------
+Eres un asistente experto en temas académicos relacionados con las materias que se dictan en la carrera de Computación de la Universidad Central del Ecuador.
+
+Si está disponible, utiliza los temas del sílabo adjuntos en la sección SILABOS para responder a las preguntas de los estudiantes.
+
+Si la respuesta no está en la sección SILABO, responde "No tengo información al respecto de ese trma del silabo.
+
+SILABO
+------
+# MATERIA: Programación Distribuida
+
+## Unidad 1: Aplicaciones Cloud Native
+
+### Resultados de aprendizaje:
+
+Aprende activamente los conceptos relacionados con:
+
+* Modelos de aplicaciones Cloud Native
+* Contenedores
+* Aplicaciones Serverless
+* Arquitecturas Cloud Native
+
+### Temas:
+
+* Introducción
+* Modelo de computación en la nube
+* Características de las aplicaciones Cloud Native
+* Topologías: contenedores, serverless
+* Arquitecturas para aplicaciones Cloud Native
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/resources/prompts/userPrompt.st
+--------------------------------------------------------------------------------
+La pregunat es: {question}
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/resources/prompts/programacion-distribuida.md
+--------------------------------------------------------------------------------
+# MATERIA: Programación Distribuida
+
+## Unidad 1: Aplicaciones Cloud Native
+
+### Resultados de aprendizaje:
+
+Aprende activamente los conceptos relacionados con:
+
+* Modelos de aplicaciones Cloud Native
+* Contenedores
+* Aplicaciones Serverless
+* Arquitecturas Cloud Native
+
+### Temas:
+
+* Introducción
+* Modelo de computación en la nube
+* Características de las aplicaciones Cloud Native
+* Topologías: contenedores, serverless
+* Arquitecturas para aplicaciones Cloud Native
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/java/com/programacion/taller3/SpringAiPromptMain.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringAiPromptMain {
+
+    static void main(String[] args) {
+        SpringApplication.run(SpringAiPromptMain.class, args);
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/java/com/programacion/taller3/config/WebConfig.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.config;
+
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedOrigins("*");
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/java/com/programacion/taller3/rest/ChatRequest.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.rest;
+// Cambia esto por tu paquete real
+
+public record ChatRequest(String message) {}
+
+--------------------------------------------------------------------------------
+Ruta: /10.spring-prompt/src/main/java/com/programacion/taller3/rest/ChatController.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.rest;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import reactor.core.publisher.Flux;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+@RestController
+public class ChatController {
+
+    final ChatClient chatClient;
+
+    @Value("classpath:/prompts/systemPrompt.st")
+    Resource systemPrompt;
+
+    @Value("classpath:/prompts/userPrompt.st")
+    Resource userPrompt;
+
+
+    public ChatController(ChatClient.Builder builder) {
+        chatClient = builder
+                //imprimir LOG PETICIONES
+                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .build();
+    }
+
+    @PostMapping(value = "/chat", consumes = "application/json",produces = "text/plain")
+    public String chat(@RequestBody ChatRequest request) {
+        return chatClient.prompt()
+                .system(systemSpec -> systemSpec
+                                .text(systemPrompt)
+                        //.param()
+                )
+                .user(userSpec -> userSpec
+                        .text(userPrompt)
+                        .param("question", request.message())
+                )
+                .call()
+                .content();
+    }
+
+
+
+    @PostMapping(value = "/api/chat", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> streamChat(@RequestBody ChatRequest request) {
+
+        var message = request.message();
+
+        if (message == null || message.isBlank()) {
+            throw new IllegalArgumentException("El mensaje no puede estar vacio");
+        }
+
+
+        Flux<ServerSentEvent<String>> tokens = chatClient.prompt()
+                .system(systemSpec -> systemSpec
+                        .text(systemPrompt)
+                )
+                .user(userSpec -> userSpec
+                        .text(userPrompt)
+                        .param("question", request.message())
+                )
+                .stream()
+                .content()
+                .map(chunk -> ServerSentEvent.<String>builder(chunk)
+                        .event("token")
+                        .data(Base64.getEncoder().encodeToString(chunk.getBytes(StandardCharsets.UTF_8)))
+                        .build()
+                );
+
+        Flux<ServerSentEvent<String>> done = Flux.just(
+                ServerSentEvent.<String>builder()
+                        .event("donde")
+                        .data("[DONE]")
+                        .build()
+        );
+
+        return tokens.concatWith(done)
+                .onErrorResume(error -> Flux.just(
+                                ServerSentEvent.<String>builder()
+                                        .event("error")
+                                        .data(error.getMessage())
+                                        .build()
+                        )
+                );
+
+    }
+
+}
+
+a7630----0d343
+c1725----d81d8
+2247b----b5386
+13050----ea3c9
+
+
+================================================================================
+PARTE 6: CÓDIGO TALLER 11.spring-rag
+================================================================================
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/build.gradle.kts
+--------------------------------------------------------------------------------
+plugins {
+    java
+    id("org.springframework.boot") version "4.0.6"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+extra["springAiVersion"] = "2.0.0"
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.ai:spring-ai-starter-model-openai")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Apache Camel para el enrutamiento y lectura de archivos
+    implementation("org.apache.camel.springboot:camel-file-starter:4.20.0")
+
+    // Lectores de documentos (PDF y Tika para múltiples formatos)
+    implementation("org.springframework.ai:spring-ai-pdf-document-reader")
+    implementation("org.springframework.ai:spring-ai-tika-document-reader")
+
+    // Generador de Embeddings local usando Transformers
+    implementation("org.springframework.ai:spring-ai-starter-model-transformers")
+
+    // Base de datos vectorial Qdrant
+    implementation("org.springframework.ai:spring-ai-starter-vector-store-qdrant")
+    implementation("org.springframework.ai:spring-ai-vector-store-advisor")
+
+    // Apache Camel core
+    implementation("org.apache.camel.springboot:camel-spring-boot-starter:4.20.0")
+
+    // Soporte Docker Compose automático en Spring Boot
+    runtimeOnly("org.springframework.boot:spring-boot-docker-compose")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+tasks.register("prepareKotlinBuildScriptModel") {}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/docker-compose.yml
+--------------------------------------------------------------------------------
+name: spring-rag
+services:
+  db:
+    image: qdrant/qdrant
+    ports:
+      - '6333:6333'
+      - '6334:6334'
+    volumes:
+      - qdrant_data:/qdrant/storage
+volumes:
+  qdrant_data:
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/resources/application.yml
+--------------------------------------------------------------------------------
+server:
+    port: 8090
+
+spring:
+    docker:
+        compose:
+            enabled: true
+            file: 11.spring-rag/docker-compose.yml
+    ai:
+        vectorstore:
+            qdrant:
+                initialize-schema: true
+        model:
+            embedding: transformers
+        embedding:
+            transformer:
+                onnx:
+                    model-uri: classpath:models/model.onnx
+                tokenizer:
+                    uri: classpath:models/tokenizer.json
+        openai:
+            api-key: ${API_KEY}
+            base-url: https://api.groq.com/openai/v1
+            chat:
+                options:
+                    model: llama-3.3-70b-versatile
+                embedding:
+                    enabled: false
+
+logging:
+    level:
+        org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/resources/prompts/systemPrompt.st
+--------------------------------------------------------------------------------
+Eres un asistente experto en temas académicos relacionados con normativa universitaria de la Universidad Central del Ecuador
+
+Tu rol principal es responder preguntas y brindar información sobre los temas del instructivo de titulación.
+
+Dado el contexto de la sección NORMATIVA, responde las preguntas respecto a titulación.
+No utilices información adicional o externa.
+En caso de no encontrar la respuesta, responde "No tengo la suficiente iknformación para responder la pregunta."
+
+NORMATIVA
+---------
+{normativa}
+---------
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/SpringAiRagMain.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringAiRagMain {
+    public static void main(String[] args) {
+        SpringApplication.run(SpringAiRagMain.class, args);
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/EmbeddingRequest.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3;
+
+import com.drew.lang.annotations.Nullable;
+import org.springframework.ai.embedding.EmbeddingOptions;
+import org.springframework.ai.model.ModelRequest;
+
+import java.util.List;
+
+public class EmbeddingRequest implements ModelRequest<List<String>> {
+
+    private final List<String> inputs;
+
+    private final @Nullable EmbeddingOptions options;
+
+    public EmbeddingRequest(List<String> inputs, @Nullable EmbeddingOptions options) {
+        this.inputs = inputs;
+        this.options = options;
+    }
+
+    @Override
+    public List<String> getInstructions() { return this.inputs; }
+
+    @Override
+    public @Nullable EmbeddingOptions getOptions() { return this.options; }
+
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/ConsultaDbVectorialMain.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3;
+
+import io.qdrant.client.QdrantClient;
+import io.qdrant.client.QdrantGrpcClient;
+import io.qdrant.client.QueryFactory;
+import io.qdrant.client.grpc.Collections.Distance;
+import io.qdrant.client.grpc.Collections.VectorParams;
+import io.qdrant.client.grpc.Points;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.embedding.EmbeddingRequest;
+import org.springframework.ai.transformers.TransformersEmbeddingModel;
+
+import java.util.List;
+
+public class ConsultaDbVectorialMain {
+
+    static float[] embedd(String text) throws Exception {
+        var embeddingModel = new TransformersEmbeddingModel(MetadataMode.ALL);
+        embeddingModel.setModelResource("classpath:models/model.onnx");
+        embeddingModel.setTokenizerResource("classpath:models/tokenizer.json");
+        embeddingModel.afterPropertiesSet();
+
+        EmbeddingRequest reqauest = new EmbeddingRequest(List.of(text), null);
+        var response = embeddingModel.call(reqauest);
+        return response.getResults().getFirst().getOutput();
+    }
+
+    public static void main(String[] args) throws Exception {
+        QdrantClient client = new QdrantClient(
+                QdrantGrpcClient.newBuilder("localhost", 6334, false).build());
+
+        String collectionName = "springai";
+
+        var collectionsList = client.listCollectionsAsync().get();
+        boolean exists = collectionsList.contains(collectionName);
+
+        if (!exists) {
+            client.createCollectionAsync(
+                    collectionName,
+                    VectorParams.newBuilder()
+                            .setDistance(Distance.Cosine)
+                            .setSize(384)
+                            .build()
+            ).get();
+            System.out.println("Colección '" + collectionName + "' creada automáticamente.");
+        }
+
+        String texto = "requisitos para titulación";
+        float[] point = embedd(texto);
+
+        var querySpec = Points.QueryPoints.newBuilder()
+                .setCollectionName(collectionName)
+                .setLimit(3)
+                .setQuery(QueryFactory.nearest(point))
+                .setWithPayload(
+                        Points.WithPayloadSelector.newBuilder()
+                                .setEnable(true)
+                                .build()
+                )
+                .build();
+
+        List<Points.ScoredPoint> results = client.queryAsync(querySpec).get();
+
+        for(var it : results) {
+            System.out.println("---------------------------------");
+            System.out.println(it);
+            System.out.println("score: " + it.getScore());
+        }
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/routers/FileReaderRouter.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.routers;
+
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class FileReaderRouter extends RouteBuilder {
+
+    @Value("${app.files.inbound:/home/edlith/tools/springai}")
+    String inboundPath;
+
+    @Override
+    public void configure() throws Exception {
+
+        String from = "file:%s?antInclude=*.pdf&delay=1000&move=procesados".formatted(inboundPath);
+
+        from(from)
+                .log("Archivo leido: ${header.CamelFileName}")
+                .bean("fileProcessor")
+                .bean("transformerProcessor")
+                .bean("embeddingProcessor");
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/services/FileProcessor.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.services;
+
+import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.tika.TikaDocumentReader;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.util.List;
+
+@Component
+public class FileProcessor {
+
+    public List<Document> procesar(File file) {
+        Resource resource = new FileSystemResource(file);
+        TikaDocumentReader reader = new TikaDocumentReader(resource);
+        List<Document> documents = reader.get();
+
+        System.out.println("Documentos creados: " + documents.size());
+        if (!documents.isEmpty()) {
+            System.out.println(documents.get(0));
+        }
+
+        return documents;
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/services/TransformerProcessor.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.services;
+
+import org.springframework.ai.document.Document;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class TransformerProcessor {
+
+    public List<Document> procesar(List<Document> documents) {
+        TokenTextSplitter splitter = TokenTextSplitter.builder().build();
+        List<Document> splitted = splitter.split(documents);
+
+        System.out.println("TransformerProcessor::documentos creados: " + splitted.size());
+        return splitted;
+    }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/services/EmbeddingProcessor.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.services;
+
+import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class EmbeddingProcessor {
+
+        @Autowired
+        VectorStore vectorStore;
+
+        @Autowired
+        EmbeddingModel embeddingModel;
+
+        public void procesar(List<Document> documents) {
+            System.out.println("EmbeddingProcessor::procesar documentos: " + documents.size());
+            vectorStore.add(documents);
+        }
+}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/rest/ChatRequest.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.rest;
+
+public record ChatRequest(String message) {}
+
+--------------------------------------------------------------------------------
+Ruta: /11.spring-rag/src/main/java/com/programacion/taller3/rest/ChatController.java
+--------------------------------------------------------------------------------
+package com.programacion.taller3.rest;
+
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import reactor.core.publisher.Flux;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+@RestController
+public class ChatController {
+
+        final ChatClient chatClient;
+
+        @Value("classpath:/prompts/systemPrompt.st")
+        Resource systemPrompt;
+
+        @Autowired
+        VectorStore vectorStore;
+
+        public ChatController(ChatClient.Builder builder) {
+                chatClient = builder
+                                .defaultAdvisors(new SimpleLoggerAdvisor())
+                                .build();
+        }
+
+        private String searchDocuments(String query) {
+                var request = SearchRequest.builder()
+                                .query(query)
+                                .topK(10)
+                                .build();
+
+                var documents = vectorStore.similaritySearch(request);
+
+                return documents.stream()
+                                .map(Document::getText)
+                                .reduce("", (a, b) -> a + System.lineSeparator() + b)
+                                .trim();
+        }
+
+        @PostMapping(value = "/api/chat", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+        public Flux<ServerSentEvent<String>> streamChat(@RequestBody ChatRequest request) {
+
+                var message = request.message();
+
+                if (message == null || message.isBlank()) {
+                        throw new IllegalArgumentException("El mensaje no puede estar vacio");
+                }
+
+                String contexto = searchDocuments(message);
+
+                var qaAdvisor = QuestionAnswerAdvisor.builder(vectorStore)
+                                .searchRequest(
+                                                SearchRequest.builder()
+                                                                .query(message)
+                                                                .topK(3)
+                                                                .build())
+                                .build();
+
+                Flux<ServerSentEvent<String>> tokens = chatClient.prompt()
+                                .system(systemSpec -> systemSpec
+                                                .text(systemPrompt)
+                                                .param("normativa", contexto))
+                                .user(message)
+                                .advisors(qaAdvisor)
+                                .stream()
+                                .content()
+                                .map(chunk -> ServerSentEvent.<String>builder(chunk)
+                                                .event("token")
+                                                .data(
+                                                                Base64.getEncoder().encodeToString(
+                                                                                 chunk.getBytes(StandardCharsets.UTF_8)))
+                                                .build());
+
+                Flux<ServerSentEvent<String>> done = Flux.just(
+                                ServerSentEvent.<String>builder()
+                                                .event("donde")
+                                                .data("[DONE]")
+                                                .build());
+
+                return tokens.concatWith(done)
+                                .onErrorResume(error -> Flux.just(
+                                                ServerSentEvent.<String>builder()
+                                                                .event("error")
+                                                                .data(error.getMessage())
+                                                                .build()));
+        }
+}
