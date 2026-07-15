@@ -2,7 +2,7 @@
 GUÍA GENERAL DE ESTUDIO DE EXAMEN - TALLERES SPRING AI
 Proyectos: 03.spring-ai, 10.spring-prompt, 11.spring-rag
 ================================================================================
-
+----- gsk_INSERTE_SU_API_KEY_AQUI -----
 ================================================================================
 PARTE 1: COMANDOS PARA EJECUTAR MODELOS LOCALES (GGUF)
 ================================================================================
