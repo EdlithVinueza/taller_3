@@ -5,15 +5,19 @@ spring:
     docker:
         compose:
             enabled: true
-            file: 11.spring-rag/docker-compose.yml
+            file: Prueba/docker-compose.yml
     ai:
         vectorstore:
             qdrant:
+                host: localhost
+                port: 6333
+                collection-name: examen_rag
                 initialize-schema: true
+                use-admin-api: true
         model:
             embedding: transformers
         embedding:
-            transformer: #Configuración para embeddings locales
+            transformer:
                 onnx:
                     model-uri: classpath:models/model.onnx
                 tokenizer:
@@ -24,12 +28,6 @@ spring:
             chat:
                 options:
                     model: llama-3.3-70b-versatile
-                embedding:
-                    enabled: false
-
-#link de descarga de model.onnx y tokenizer.json
-#https://github.com/spring-projects/spring-ai/tree/main/models/spring-ai-transformers/src/main/resources/onnx/all-MiniLM-L6-v2
-#se ingnoran estos archivos al subir el proyecto a github
 
 logging:
     level:

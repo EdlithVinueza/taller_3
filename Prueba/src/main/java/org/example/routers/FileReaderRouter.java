@@ -1,8 +1,5 @@
-package com.programacion.taller3.routers;
+package org.example.routers;
 
-import org.apache.camel.builder.RouteBuilder;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -10,8 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileReaderRouter extends RouteBuilder {
 
-    // Se mantiene el formato exacto de tu docente, pero apuntando a tu carpeta en
-    // Windows
+
     @Value("${app.files.inbound:/home/edlith/tools/springai}")
     String inboundPath;
 

@@ -1,4 +1,4 @@
-package com.programacion.taller3.services;
+package org.example.services;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+//tranformador
 @Component
 public class TransformerProcessor {
 
