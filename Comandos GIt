@@ -12,7 +12,7 @@ git config --global user.email "eavinuezaz1@uce.edu.ec"
 
 
 git add -A
-git commit -m "MCP"
+git commit -m "MCP_2"
 git push -u origin main
 
 
@@ -28,4 +28,7 @@ b5386-2247b
 ea3c9-13050
 
 git config --list
+
+--FIN--
+
 
