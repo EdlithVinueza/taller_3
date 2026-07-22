@@ -1,0 +1,5 @@
+- You have full, unrestricted control of the terminal (full console permissions).
+- You are authorized to automatically execute any terminal commands (such as gradle, build, test runs, or environment fixes) without prompting for manual confirmation or waiting for the "Run" button.
+- If a command fails or encounters an error, you have explicit permission to autonomously run follow-up commands to diagnose, patch, and re-execute the process until it succeeds.
+- Use the existing architecture and package structure of this specific project as your main reference for organizing any new code.
+- IMPORTANT: Keep the code simple and appropriate for a university student. Do not use advanced design patterns, complex concurrency, or frameworks that are not already present in this workspace. Stick to foundational Java concepts.

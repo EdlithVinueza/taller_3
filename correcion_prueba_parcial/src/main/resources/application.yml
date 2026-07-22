@@ -1,0 +1,34 @@
+server:
+  port: 8081
+
+spring:
+  docker:
+    compose:
+      enabled: true
+      file: correcion_prueba_parcial/docker-compose.yml
+  ai:
+    vectorstore:
+      qdrant:
+        collection-name: examen_rag
+        initialize-schema: true
+    model:
+      embedding: transformers
+    embedding:
+      transformer:
+        onnx:
+          model-uri: classpath:models/model.onnx
+        tokenizer:
+          uri: classpath:models/tokenizer.json
+    openai:
+      api-key: ${API_KEY}
+      base-url: https://api.groq.com/openai/v1
+      chat:
+        options:
+          model: openai/gpt-oss-20b
+        embedding:
+          enabled: false
+
+
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG

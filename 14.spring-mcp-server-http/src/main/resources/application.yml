@@ -1,11 +1,16 @@
+# Configuración del servidor HTTP para MCP (Model Context Protocol)
 server:
+  # Puerto en el que se escuchará la API HTTP del servidor MCP
   port: 3001
 spring:
   ai:
     mcp:
       server:
+        # Metadatos del servidor MCP
         name: mi-mcp-server
         version: 1.0.0
+        # Protocolo de transporte: streamable (HTTP con Server-Sent Events - SSE)
         protocol: streamable
         streamable-http:
-          mcp-endpoint: /mcp
+          # Ruta del endpoint donde el cliente MCP conectará para enviar/recibir eventos MCP
+          mcp-endpoint: /mcp

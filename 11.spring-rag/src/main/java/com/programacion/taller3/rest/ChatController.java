@@ -3,6 +3,8 @@ package com.programacion.taller3.rest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -30,7 +32,7 @@ public class ChatController {
 
         public ChatController(ChatClient.Builder builder) {
                 chatClient = builder
-                                // imprimir LOG PETICIONES
+                             
                                 .defaultAdvisors(new SimpleLoggerAdvisor())
                                 .build();
         }
@@ -58,26 +60,10 @@ public class ChatController {
                         throw new IllegalArgumentException("El mensaje no puede estar vacio");
                 }
 
-                // convertir la pregunta a VECTOR
-                // buscar en la base vectorial
-                // poner el contexto en el prompt del system
+        
                 String contexto = searchDocuments(message);
 
-                // Flux<ServerSentEvent<String>> tokens = chatClient.prompt()
-                // .system(systemSpec -> systemSpec
-                // .text(systemPrompt)
-                // )
-                // .user(userSpec -> userSpec
-                // .text(systemPrompt)
-                // .param("question", request.message())
-                // )
-                // .stream()
-                // .content()
-                // .map(chunk -> ServerSentEvent.<String>builder(chunk)
-                // .event("token")
-                // .data(Base64.getEncoder().encodeToString(chunk.getBytes(StandardCharsets.UTF_8)))
-                // .build()
-                // );
+        
                 var qaAdvisor = QuestionAnswerAdvisor.builder(vectorStore)
                                 .searchRequest(
                                                 SearchRequest.builder()
@@ -86,12 +72,15 @@ public class ChatController {
                                                                 .build())
                                 .build();
 
+                var chatMemoryAdvisor = VectorStoreChatMemoryAdvisor.builder(vectorStore).build();
+
                 Flux<ServerSentEvent<String>> tokens = chatClient.prompt()
                                 .system(systemSpec -> systemSpec
                                                 .text(systemPrompt)
                                                 .param("normativa", contexto))
                                 .user(message)
-                                .advisors(qaAdvisor)
+                                .advisors(qaAdvisor, chatMemoryAdvisor)
+                                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, "default-conversation"))
                                 .stream()
                                 .content()
                                 .map(chunk -> ServerSentEvent.<String>builder(chunk)

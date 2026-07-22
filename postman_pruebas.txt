@@ -1,0 +1,71 @@
+========================================================================
+GUÍA DE PRUEBAS EN POSTMAN
+========================================================================
+
+Este documento explica de forma detallada cómo probar los endpoints del módulo
+'correcion_prueba_parcial' usando Postman. El puerto configurado es el 8081.
+
+------------------------------------------------------------------------
+1. ENDPOINT: Ingesta de Documento PDF (Cargar y Vectorizar)
+------------------------------------------------------------------------
+
+* HTTP Method: POST
+* Request URL: http://localhost:8081/api/ingest
+* Headers:
+  - No fijar 'Content-Type' manualmente, Postman lo establece automáticamente
+    con el boundary adecuado para multipart/form-data.
+
+* Body (Seleccionar pestaña "Body"):
+  - Seleccionar opción: "form-data"
+  - En la tabla de parámetros, ingresar los siguientes datos:
+    + KEY: file
+      * Mover el cursor sobre el campo KEY y cambiar el tipo de "Text" a "File" (aparece un menú desplegable al pasar el mouse por la derecha de la celda de KEY).
+    + VALUE: Hacer clic en "Select Files" y elegir el archivo PDF que deseas indexar.
+
+* Respuesta Esperada (200 OK):
+  Un texto plano similar a este:
+  "Archivo procesado y guardado con éxito. Chunks creados: <número_de_chunks>"
+
+------------------------------------------------------------------------
+2. ENDPOINT: Chat Bot con Contexto del PDF (Consultas RAG)
+------------------------------------------------------------------------
+
+* HTTP Method: POST
+* Request URL: http://localhost:8081/api/chat
+* Headers:
+  - Content-Type: application/json
+
+* Body (Seleccionar pestaña "Body"):
+  - Seleccionar opción: "raw"
+  - En el menú desplegable de tipo de formato (a la derecha de raw), elegir: "JSON"
+  - Introducir el siguiente contenido JSON:
+
+    {
+        "message": "¿Cuál es la normativa sobre la fecha máxima para la titulación?"
+    }
+
+* Respuesta Esperada (200 OK):
+  Un objeto JSON con la respuesta del LLM y las fuentes utilizadas:
+
+    {
+        "answer": "La fecha máxima para la titulación según la normativa universitaria es...",
+        "source": [
+            "Texto del primer fragmento de 300 tokens del PDF...",
+            "Texto del segundo fragmento de 300 tokens del PDF...",
+            "Texto del tercer fragmento de 300 tokens del PDF..."
+        ]
+    }
+
+------------------------------------------------------------------------
+3. NOTAS IMPORTANTES Y REQUISITOS PREVIOS
+------------------------------------------------------------------------
+
+* Base de Datos Vectorial (Qdrant):
+  Asegúrate de que el servicio Qdrant esté activo en los puertos 6333 y 6334 antes de iniciar la aplicación.
+  Puedes iniciarlo mediante docker, por ejemplo:
+  docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
+
+* Credenciales de API (Llamadas a LLM):
+  Antes de iniciar la aplicación desde la terminal, recuerda establecer la variable de entorno API_KEY
+  con tu clave de Groq/OpenAI:
+  export API_KEY="tu_api_key_aqui"

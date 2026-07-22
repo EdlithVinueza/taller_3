@@ -8,8 +8,10 @@ spring:
         name: mi-mcp-server
         version: 1.0.0
 
+# Redirige los logs para que no ensucien STDOUT
 logging:
-  file:
-    name: mcp-server.log
   pattern:
-    console: ""
+    console: "" # Desactiva el formato de consola por defecto en STDOUT
+  # Opcionalmente puedes forzar los logs a un archivo:
+  file:
+    name: logs/mcp-server.log

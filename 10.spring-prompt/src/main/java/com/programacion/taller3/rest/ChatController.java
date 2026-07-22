@@ -57,7 +57,6 @@ public class ChatController {
             throw new IllegalArgumentException("El mensaje no puede estar vacio");
         }
 
-
         Flux<ServerSentEvent<String>> tokens = chatClient.prompt()
                 .system(systemSpec -> systemSpec
                         .text(systemPrompt)

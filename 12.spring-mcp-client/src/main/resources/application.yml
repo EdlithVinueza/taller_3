@@ -1,39 +1,42 @@
+# Configuración del Cliente MCP y componentes de IA en Spring Boot
 server:
   port: 8090
 
 spring:
-#  docker:
-#    compose:
-#      enabled: true
-#      file: 11.spring-rag/docker-compose.yml
   ai:
+    # Selección del modelo de embeddings predeterminado
     model:
       embedding: openai
+    # Configuración de modelo de embeddings local ONNX / Transformers
     embedding:
       transformer:
         onnx:
           model-uri: classpath:models/model.onnx
-#          gpu-device-id: 0
         tokenizer:
           uri: classpath:models/tokenizer.json
+    # Configuración de la base de datos vectorial Qdrant
     vectorstore:
       qdrant:
         host: localhost
         port: 6334
         collection-name: mi_coleccion_rag
+    # Configuración del LLM (compatible con OpenAI API, mapeado a Groq)
     openai:
-      api-key:  ${API_KEY}
+      api-key: ${API_KEY}
       base-url: https://api.groq.com/openai/v1
       chat:
         options:
           model: llama-3.3-70b-versatile
       embedding:
         enabled: false
+    # Configuración del cliente MCP para cargar servidores externos vía STDIO
     mcp:
       client:
         stdio:
           servers-configuration: classpath:mcp-server.json
 
+# Logs detallados para auditar las llamadas a herramientas y prompts del ChatClient
 logging:
   level:
     org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: DEBUG
+

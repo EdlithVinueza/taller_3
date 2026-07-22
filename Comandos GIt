@@ -1,0 +1,31 @@
+
+git init
+git add -A
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/EdlithVinueza/notas.git
+git push -u origin main
+
+
+git config --global user.name "EdlithVinueza"
+git config --global user.email "eavinuezaz1@uce.edu.ec"
+
+
+git add -A
+git commit -m "MCP"
+git push -u origin main
+
+
+### Borrar credenciales
+
+
+git config --global --unset user.name
+git config --global --unset user.email
+
+
+d81d8-c1725
+b5386-2247b
+ea3c9-13050
+
+git config --list
+

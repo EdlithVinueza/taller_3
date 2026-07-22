@@ -1,0 +1,41 @@
+Necestio hacer lo siguiente:
+
+Como pueder ver en el modulo llamado: 11.spring-rag, estamos leyendo una carpeta que tiene los documentos PDF, que van a ser procesados para ser guardados en una base vectoria rqart
+la prueba que me tomaron era algo simila rpero con estas especidifcaciones:
+enpoint solicitados:
+    Post /api/ingest: multipart/form-data(campo file, PDF a subir
+        Lee el PDF con PagePdfDocumentReader o TikaDcocumentoReader, lo divide con TokenTextSlitter(Chunck = 300 token), genera embendigis con TRanformer onnx y persistencia en QdrantCollection = examen_rag)
+    Post /api/chat: application/json {"message": "...."} -> application/json
+Respode de forma sincronica con un objeto
+{
+"answer": "....",,
+source:[
+ "<fragmento 1>",
+ "<fragmento 2>",
+ ...]
+}
+especificaciones adicionales:
+se debe utilixar retrieval manual con vecctoreStoresimlarutySearch(...) (topK=3) y los chunco se deben anexar al system promo, las fuentes (sourse del json son los textos de esos tres mismos 3 cuchunks) y la respuesta debe ser generada por el modelo de lenguaje (llm) con el system prompt y los 3 chunks anexados al system prompt.
+Versiones necesarias: Sprngboot 4.1.0, SpringAi 2.0.0 Gradle kotlin dsl
+en el aplication yml esta prohido fijar manualmente las credenciales en el coidogo
+servico gdran en 6333 y 6334
+la base de datos qdran se debebe llamar examen_rag
+prompt de ejemplo de resorces:
+Responde solo con informacion del "contexto" del PDF adjunto. Si la respuesta no está en el documento, responde textualmente: "No conozco"
+Responde en español, independientemente de la pregunta que se haga, no agregues información adicional ni externa.
+
+
+
+INSTRUCCION
+---------
+{contexto}
+---------
+ necesito que me generes en un text txt todo el codigo necesario para que pueda hacer la prueba de la manera que me lo solicitaron, para yo aprender
+ debre ponerme e el txt:
+ build.gradle.kt.
+ application.yml
+ los paquetes y las clases java
+ promt.st
+
+la forma en como escribir codigo y como incovar al agente con sprpin deben ser identicas al modulo de 11.spring-rag. ya que todo el codifolo lo ponde en un nuevo modulo llamado correcion_prueba_parcial,
+ademas en otro txt quier que me pongas como debo pobrar los enpoint en postman
